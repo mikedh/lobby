@@ -40,6 +40,7 @@ setup(name='lobby',
           'Programming Language :: Python :: 3.7',
           'Natural Language :: English',
           'Topic :: Scientific/Engineering'],
-      packages=['lobby'],
+      packages=['lobby',
+                'lobby.bintree'],
       install_requires=[]
       )
