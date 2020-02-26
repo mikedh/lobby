@@ -1,10 +1,10 @@
-'''
-Created on Mar 27, 2013
+"""
+ordertree.py
+--------------
 
-@author: Ash Booth
-'''
-
-from .BinTrees import RBTree
+Maintain a price-sorted list of orders.
+"""
+from .bintree import RBTree
 from .orderlist import OrderList
 from .order import Order
 

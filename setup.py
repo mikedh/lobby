@@ -40,7 +40,6 @@ setup(name='lobby',
           'Programming Language :: Python :: 3.7',
           'Natural Language :: English',
           'Topic :: Scientific/Engineering'],
-      packages=[
-          'lobby', ],
-      install_requires=['sortedcontainers']
+      packages=['lobby'],
+      install_requires=[]
       )
