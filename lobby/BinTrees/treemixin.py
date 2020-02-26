@@ -1,13 +1,14 @@
 #!/usr/bin/env python
-#coding:utf-8
+# coding:utf-8
 # Author:  Mozman
 # Purpose: treemixin provides top level functions for binary trees
 # Created: 03.05.2010
 
-from iterator import TreeIterator
-from walker import Walker
-from treeslice import TreeSlice
- 
+from .iterator import TreeIterator
+from .walker import Walker
+from .treeslice import TreeSlice
+
+
 class TreeMixin(object):
     """
     Abstract-Base-Class for the pure Python Trees: BinaryTree, AVLTree and RBTree
@@ -134,13 +135,15 @@ class TreeMixin(object):
     * fromkeys(S[,v]) -> New tree with keys from S and values equal to v.
 
     """
+
     def get_walker(self):
         return Walker(self)
 
     def __repr__(self):
         """ x.__repr__(...) <==> repr(x) """
-        tpl = "%s({%s})" % (self.__class__.__name__ , '%s')
-        return tpl % ", ".join( ("%r: %r" % item for item in self.items()) )
+        tpl = "%s({%s})" % (self.__class__.__name__, '%s')
+        return tpl % ", ".join(
+            ("%r: %r" % item for item in list(self.items())))
 
     def copy(self):
         """ T.copy() -> get a shallow copy of T. """
@@ -204,7 +207,7 @@ class TreeMixin(object):
         order if reverse is True, iterate in descending order, reverse defaults
         to False
         """
-        return ( item[0] for item in self.items(reverse) )
+        return (item[0] for item in self.items(reverse))
     __iter__ = keys
 
     def __reversed__(self):
@@ -214,7 +217,7 @@ class TreeMixin(object):
         """ T.values([reverse]) -> an iterator over the values of T, in ascending order
         if reverse is True, iterate in descending order, reverse defaults to False
         """
-        return ( item[1] for item in self.items(reverse) )
+        return (item[1] for item in self.items(reverse))
 
     def items(self, reverse=False):
         """ T.items([reverse]) -> an iterator over the (key, value) items of T,
@@ -238,7 +241,7 @@ class TreeMixin(object):
                     go_down = True
                 else:
                     if node.stack_is_empty():
-                        return # all done
+                        return  # all done
                     node.pop()
                     go_down = False
 
@@ -280,7 +283,7 @@ class TreeMixin(object):
         """ T.keyslice(startkey, endkey) -> key iterator:
         startkey <= key < endkey.
         """
-        return ( item[0] for item in self.itemslice(startkey, endkey) )
+        return (item[0] for item in self.itemslice(startkey, endkey))
 
     def itemslice(self, startkey, endkey):
         """ T.itemslice(s, e) -> item iterator: s <= key < e.
@@ -295,26 +298,26 @@ class TreeMixin(object):
 
         if startkey is None:
             # no lower bound
-            can_go_left = lambda: node.has_left() and visit_left
+            def can_go_left(): return node.has_left() and visit_left
         else:
             # don't visit subtrees without keys in search range
-            can_go_left = lambda: node.key > startkey and node.has_left() and visit_left
+            def can_go_left(): return node.key > startkey and node.has_left() and visit_left
 
         if endkey is None:
             # no upper bound
-            can_go_right = lambda: node.has_right()
+            def can_go_right(): return node.has_right()
         else:
             # don't visit subtrees without keys in search range
-            can_go_right = lambda: node.key < endkey and node.has_right()
+            def can_go_right(): return node.key < endkey and node.has_right()
 
         if (startkey, endkey) == (None, None):
-            key_in_range = lambda: True
+            def key_in_range(): return True
         elif startkey is None:
-            key_in_range = lambda: node.key < endkey
+            def key_in_range(): return node.key < endkey
         elif endkey is None:
-            key_in_range = lambda: node.key >= startkey
+            def key_in_range(): return node.key >= startkey
         else:
-            key_in_range = lambda: startkey <= node.key < endkey
+            def key_in_range(): return startkey <= node.key < endkey
 
         node = self.get_walker()
         visit_left = True
@@ -339,7 +342,7 @@ class TreeMixin(object):
         """ T.valueslice(startkey, endkey) -> value iterator:
         startkey <= key < endkey.
         """
-        return ( item[1] for item in self.itemslice(startkey, endkey) )
+        return (item[1] for item in self.itemslice(startkey, endkey))
 
     def get_value(self, key):
         node = self.root
@@ -353,7 +356,7 @@ class TreeMixin(object):
         raise KeyError(str(key))
 
     def __getstate__(self):
-        return dict(self.items())
+        return dict(list(self.items()))
 
     def __setstate__(self, state):
         # note for myself: this is called like __init__, so don't use clear()
@@ -374,7 +377,7 @@ class TreeMixin(object):
         """ T.update(E) -> None. Update T from E : for (k, v) in E: T[k] = v """
         for items in args:
             try:
-                generator = items.items()
+                generator = list(items.items())
             except AttributeError:
                 generator = iter(items)
 
@@ -404,7 +407,9 @@ class TreeMixin(object):
         If key is not found, d is returned if given, otherwise KeyError is raised
         """
         if len(args) > 1:
-            raise TypeError("pop expected at most 2 arguments, got %d" % (1+len(args)))
+            raise TypeError(
+                "pop expected at most 2 arguments, got %d" %
+                (1 + len(args)))
         try:
             value = self.get_value(key)
             self.remove(key)
@@ -538,8 +543,8 @@ class TreeMixin(object):
         if pop:
             return [self.pop_min() for _ in range(min(len(self), n))]
         else:
-            items = self.items()
-            return  [ next(items) for _ in range(min(len(self), n)) ]
+            items = list(self.items())
+            return [next(items) for _ in range(min(len(self), n))]
 
     def nlargest(self, n, pop=False):
         """ T.nlargest(n) -> get list of n largest items (k, v).
@@ -549,54 +554,54 @@ class TreeMixin(object):
             return [self.pop_max() for _ in range(min(len(self), n))]
         else:
             items = self.items(reverse=True)
-            return [ next(items) for _ in range(min(len(self), n)) ]
+            return [next(items) for _ in range(min(len(self), n))]
 
     def intersection(self, *trees):
         """ x.intersection(t1, t2, ...) -> Tree, with keys *common* to all trees
         """
-        thiskeys = frozenset(self.keys())
+        thiskeys = frozenset(list(self.keys()))
         sets = _build_sets(trees)
         rkeys = thiskeys.intersection(*sets)
-        return self.__class__( ((key, self.get(key)) for key in rkeys) )
+        return self.__class__(((key, self.get(key)) for key in rkeys))
 
     def union(self, *trees):
         """ x.union(t1, t2, ...) -> Tree with keys from *either* trees
         """
-        thiskeys = frozenset(self.keys())
+        thiskeys = frozenset(list(self.keys()))
         rkeys = thiskeys.union(*_build_sets(trees))
-        return self.__class__( ((key, self.get(key)) for key in rkeys) )
+        return self.__class__(((key, self.get(key)) for key in rkeys))
 
     def difference(self, *trees):
         """ x.difference(t1, t2, ...) -> Tree with keys in T but not any of t1,
         t2, ...
         """
-        thiskeys = frozenset(self.keys())
+        thiskeys = frozenset(list(self.keys()))
         rkeys = thiskeys.difference(*_build_sets(trees))
-        return self.__class__( ((key, self.get(key)) for key in rkeys) )
+        return self.__class__(((key, self.get(key)) for key in rkeys))
 
     def symmetric_difference(self, tree):
         """ x.symmetric_difference(t1) -> Tree with keys in either T and t1  but
         not both
         """
-        thiskeys = frozenset(self.keys())
-        rkeys = thiskeys.symmetric_difference(frozenset(tree.keys()))
-        return self.__class__( ((key, self.get(key)) for key in rkeys) )
+        thiskeys = frozenset(list(self.keys()))
+        rkeys = thiskeys.symmetric_difference(frozenset(list(tree.keys())))
+        return self.__class__(((key, self.get(key)) for key in rkeys))
 
     def issubset(self, tree):
         """ x.issubset(tree) -> True if every element in x is in tree """
-        thiskeys = frozenset(self.keys())
-        return thiskeys.issubset(frozenset(tree.keys()))
+        thiskeys = frozenset(list(self.keys()))
+        return thiskeys.issubset(frozenset(list(tree.keys())))
 
     def issuperset(self, tree):
         """ x.issubset(tree) -> True if every element in tree is in x """
-        thiskeys = frozenset(self.keys())
-        return thiskeys.issuperset(frozenset(tree.keys()))
+        thiskeys = frozenset(list(self.keys()))
+        return thiskeys.issuperset(frozenset(list(tree.keys())))
 
     def isdisjoint(self, tree):
         """ x.isdisjoint(S) ->  True if x has a null intersection with tree """
-        thiskeys = frozenset(self.keys())
-        return thiskeys.isdisjoint(frozenset(tree.keys()))
+        thiskeys = frozenset(list(self.keys()))
+        return thiskeys.isdisjoint(frozenset(list(tree.keys())))
+
 
 def _build_sets(trees):
-    return [ frozenset(tree.keys()) for tree in trees ]
-
+    return [frozenset(list(tree.keys())) for tree in trees]

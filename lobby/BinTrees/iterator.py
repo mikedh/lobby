@@ -1,13 +1,15 @@
 #!/usr/bin/env python
-#coding:utf-8
+# coding:utf-8
 # Author:  Mozman
 # Purpose: iterator provides a TreeIterator for binary trees
 # Created: 04.05.2010
 # Copyright (C) 2010, 2011 by Manfred Moitzi
-# License: LGPLv3 
+# License: LGPLv3
+
 
 class TreeIterator(object):
     __slots__ = ['_tree', '_direction', '_item', '_retfunc', ]
+
     def __init__(self, tree, rtype='key', reverse=False):
         """
         required tree methods:
@@ -51,7 +53,7 @@ class TreeIterator(object):
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         return self._step(1)
     __next__ = next
 

@@ -1,13 +1,15 @@
 #!/usr/bin/env python
-#coding:utf-8
+# coding:utf-8
 # Author:  mozman -- <mozman@gmx.at>
 # Purpose: TreeSlice
 # Created: 11.04.2011
 # Copyright (C) 2010, 2011 by Manfred Moitzi
 # License: LGPLv3
 
+
 class TreeSlice(object):
     __slots__ = ['_tree', '_start', '_stop']
+
     def __init__(self, tree, start, stop):
         self._tree = tree
         self._start = start
@@ -15,19 +17,20 @@ class TreeSlice(object):
 
     def __repr__(self):
         tpl = "%s({%s})" % (self._tree.__class__.__name__, '%s')
-        return tpl % ", ".join( ("%r: %r" % item for item in self._tree.itemslice(self._start, self._stop)) )
+        return tpl % ", ".join(
+            ("%r: %r" % item for item in self._tree.itemslice(self._start, self._stop)))
 
     def __contains__(self, key):
         if self._inrange(key):
-            return key in  self._tree
+            return key in self._tree
         else:
             return False
 
     def _inrange(self, key):
         if self._start is not None and key < self._start:
-                return False
+            return False
         if self._stop is not None and key >= self._stop:
-                return False
+            return False
         return True
 
     def __getitem__(self, key):
@@ -46,6 +49,7 @@ class TreeSlice(object):
                 return start
             else:
                 return max(start, self._start)
+
         def newstop():
             if stop is None:
                 return self._stop

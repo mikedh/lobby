@@ -1,20 +1,20 @@
-'''
-Created on Mar 28, 2013
+"""
+orderbook.py
+-------------
 
-@author: Ash Booth
-         
-'''
+Keep a book of orders.
+"""
 
 import sys
 import math
 from collections import deque
-from cStringIO import StringIO
+from io import StringIO
+from .ordertree import OrderTree
 
-from ordertree import OrderTree
 
 class OrderBook(object):
-    def __init__(self, tick_size = 0.0001):
-        self.tape = deque(maxlen=None) # Index [0] is most recent trade
+    def __init__(self, tick_size=0.0001):
+        self.tape = deque(maxlen=None)  # Index [0] is most recent trade
         self.bids = OrderTree()
         self.asks = OrderTree()
         self.lastTick = None
@@ -22,14 +22,14 @@ class OrderBook(object):
         self.tickSize = tick_size
         self.time = 0
         self.nextQuoteID = 0
-        
+
     def clipPrice(self, price):
         """ Clips the price according to the ticksize """
         return round(price, int(math.log10(1 / self.tickSize)))
-    
+
     def updateTime(self):
-        self.time+=1
-    
+        self.time += 1
+
     def processOrder(self, quote, fromData, verbose):
         orderType = quote['type']
         orderInBook = None
@@ -40,21 +40,23 @@ class OrderBook(object):
             quote['timestamp'] = self.time
         if quote['qty'] <= 0:
             sys.exit('processLimitOrder() given order of qty <= 0')
-        if not fromData: self.nextQuoteID += 1
-        if orderType=='market':
+        if not fromData:
+            self.nextQuoteID += 1
+        if orderType == 'market':
             trades = self.processMarketOrder(quote, verbose)
-        elif orderType=='limit':
+        elif orderType == 'limit':
             quote['price'] = self.clipPrice(quote['price'])
-            trades, orderInBook = self.processLimitOrder(quote, fromData, verbose)
+            trades, orderInBook = self.processLimitOrder(
+                quote, fromData, verbose)
         else:
             sys.exit("processOrder() given neither 'market' nor 'limit'")
         return trades, orderInBook
-    
-    def processOrderList(self, side, orderlist, 
+
+    def processOrderList(self, side, orderlist,
                          qtyStillToTrade, quote, verbose):
         '''
-        Takes an order list (stack of orders at one price) and 
-        an incoming order and matches appropriate trades given 
+        Takes an order list (stack of orders at one price) and
+        an incoming order and matches appropriate trades given
         the orders quantity.
         '''
         trades = []
@@ -72,7 +74,7 @@ class OrderBook(object):
                 qtyToTrade = 0
             elif qtyToTrade == headOrder.qty:
                 tradedQty = qtyToTrade
-                if side=='bid':
+                if side == 'bid':
                     # Hit the bid
                     self.bids.removeOrderById(headOrder.idNum)
                 else:
@@ -82,7 +84,7 @@ class OrderBook(object):
                 qtyToTrade = 0
             else:
                 tradedQty = headOrder.qty
-                if side=='bid':
+                if side == 'bid':
                     # Hit the bid
                     self.bids.removeOrderById(headOrder.idNum)
                 else:
@@ -90,56 +92,57 @@ class OrderBook(object):
                     self.asks.removeOrderById(headOrder.idNum)
                 # We need to keep eating into volume at this price
                 qtyToTrade -= tradedQty
-            if verbose: print('>>> TRADE \nt=%d $%f n=%d p1=%d p2=%d' % 
-                              (self.time, tradedPrice, tradedQty, 
-                               counterparty, quote['tid']))
-            
+            if verbose:
+                print(('>>> TRADE \nt=%d $%f n=%d p1=%d p2=%d' %
+                       (self.time, tradedPrice, tradedQty,
+                        counterparty, quote['tid'])))
+
             transactionRecord = {'timestamp': self.time,
                                  'price': tradedPrice,
                                  'qty': tradedQty,
                                  'time': self.time}
             if side == 'bid':
-                transactionRecord['party1'] = [counterparty, 
-                                               'bid', 
+                transactionRecord['party1'] = [counterparty,
+                                               'bid',
                                                headOrder.idNum]
-                transactionRecord['party2'] = [quote['tid'], 
+                transactionRecord['party2'] = [quote['tid'],
                                                'ask',
                                                None]
             else:
-                transactionRecord['party1'] = [counterparty, 
-                                               'ask', 
+                transactionRecord['party1'] = [counterparty,
+                                               'ask',
                                                headOrder.idNum]
-                transactionRecord['party2'] = [quote['tid'], 
+                transactionRecord['party2'] = [quote['tid'],
                                                'bid',
                                                None]
             self.tape.append(transactionRecord)
             trades.append(transactionRecord)
         return qtyToTrade, trades
-    
+
     def processMarketOrder(self, quote, verbose):
         trades = []
         qtyToTrade = quote['qty']
         side = quote['side']
         if side == 'bid':
-            while qtyToTrade > 0 and self.asks: 
+            while qtyToTrade > 0 and self.asks:
                 bestPriceAsks = self.asks.minPriceList()
-                qtyToTrade, newTrades = self.processOrderList('ask', 
-                                                                 bestPriceAsks, 
-                                                                 qtyToTrade, 
-                                                                 quote, verbose)
+                qtyToTrade, newTrades = self.processOrderList('ask',
+                                                              bestPriceAsks,
+                                                              qtyToTrade,
+                                                              quote, verbose)
                 trades += newTrades
         elif side == 'ask':
-            while qtyToTrade > 0 and self.bids: 
+            while qtyToTrade > 0 and self.bids:
                 bestPriceBids = self.bids.maxPriceList()
-                qtyToTrade, newTrades = self.processOrderList('bid', 
-                                                                 bestPriceBids, 
-                                                                 qtyToTrade, 
-                                                                 quote, verbose)
+                qtyToTrade, newTrades = self.processOrderList('bid',
+                                                              bestPriceBids,
+                                                              qtyToTrade,
+                                                              quote, verbose)
                 trades += newTrades
         else:
             sys.exit('processMarketOrder() received neither "bid" nor "ask"')
         return trades
-    
+
     def processLimitOrder(self, quote, fromData, verbose):
         orderInBook = None
         trades = []
@@ -147,13 +150,13 @@ class OrderBook(object):
         side = quote['side']
         price = quote['price']
         if side == 'bid':
-            while (self.asks and 
-                   price >= self.asks.minPrice() and 
+            while (self.asks and
+                   price >= self.asks.minPrice() and
                    qtyToTrade > 0):
                 bestPriceAsks = self.asks.minPriceList()
-                qtyToTrade, newTrades = self.processOrderList('ask', 
-                                                              bestPriceAsks, 
-                                                              qtyToTrade, 
+                qtyToTrade, newTrades = self.processOrderList('ask',
+                                                              bestPriceAsks,
+                                                              qtyToTrade,
                                                               quote, verbose)
                 trades += newTrades
             # If volume remains, add to book
@@ -164,13 +167,13 @@ class OrderBook(object):
                 self.bids.insertOrder(quote)
                 orderInBook = quote
         elif side == 'ask':
-            while (self.bids and 
-                   price <= self.bids.maxPrice() and 
+            while (self.bids and
+                   price <= self.bids.maxPrice() and
                    qtyToTrade > 0):
                 bestPriceBids = self.bids.maxPriceList()
-                qtyToTrade, newTrades = self.processOrderList('bid', 
-                                                              bestPriceBids, 
-                                                              qtyToTrade, 
+                qtyToTrade, newTrades = self.processOrderList('bid',
+                                                              bestPriceBids,
+                                                              qtyToTrade,
                                                               quote, verbose)
                 trades += newTrades
             # If volume remains, add to book
@@ -184,7 +187,7 @@ class OrderBook(object):
             sys.exit('processLimitOrder() given neither bid nor ask')
         return trades, orderInBook
 
-    def cancelOrder(self, side, idNum, time = None):
+    def cancelOrder(self, side, idNum, time=None):
         if time:
             self.time = time
         else:
@@ -197,7 +200,7 @@ class OrderBook(object):
                 self.asks.removeOrderById(idNum)
         else:
             sys.exit('cancelOrder() given neither bid nor ask')
-    
+
     def modifyOrder(self, idNum, orderUpdate, time=None):
         if time:
             self.time = time
@@ -214,10 +217,10 @@ class OrderBook(object):
                 self.asks.updateOrder(orderUpdate)
         else:
             sys.exit('modifyOrder() given neither bid nor ask')
-    
+
     def getVolumeAtPrice(self, side, price):
         price = self.clipPrice(price)
-        if side =='bid':
+        if side == 'bid':
             vol = 0
             if self.bids.priceExists(price):
                 vol = self.bids.getPrice(price).volume
@@ -229,47 +232,49 @@ class OrderBook(object):
             return vol
         else:
             sys.exit('getVolumeAtPrice() given neither bid nor ask')
-    
+
     def getBestBid(self):
         return self.bids.maxPrice()
+
     def getWorstBid(self):
         return self.bids.minPrice()
+
     def getBestAsk(self):
         return self.asks.minPrice()
+
     def getWorstAsk(self):
         return self.asks.maxPrice()
-    
+
     def tapeDump(self, fname, fmode, tmode):
-            dumpfile = open(fname, fmode)
-            for tapeitem in self.tape:
-                dumpfile.write('%s, %s, %s\n' % (tapeitem['time'], 
-                                                 tapeitem['price'], 
-                                                 tapeitem['qty']))
-            dumpfile.close()
-            if tmode == 'wipe':
-                    self.tape = []
-        
+        dumpfile = open(fname, fmode)
+        for tapeitem in self.tape:
+            dumpfile.write('%s, %s, %s\n' % (tapeitem['time'],
+                                             tapeitem['price'],
+                                             tapeitem['qty']))
+        dumpfile.close()
+        if tmode == 'wipe':
+            self.tape = []
+
     def __str__(self):
         fileStr = StringIO()
         fileStr.write("------ Bids -------\n")
-        if self.bids != None and len(self.bids) > 0:
+        if self.bids is not None and len(self.bids) > 0:
             for k, v in self.bids.priceTree.items(reverse=True):
                 fileStr.write('%s' % v)
         fileStr.write("\n------ Asks -------\n")
-        if self.asks != None and len(self.asks) > 0:
-            for k, v in self.asks.priceTree.items():
+        if self.asks is not None and len(self.asks) > 0:
+            for k, v in list(self.asks.priceTree.items()):
                 fileStr.write('%s' % v)
         fileStr.write("\n------ Trades ------\n")
-        if self.tape != None and len(self.tape) > 0:
+        if self.tape is not None and len(self.tape) > 0:
             num = 0
             for entry in self.tape:
                 if num < 5:
-                    fileStr.write(str(entry['qty']) + " @ " + 
-                                  str(entry['price']) + 
+                    fileStr.write(str(entry['qty']) + " @ " +
+                                  str(entry['price']) +
                                   " (" + str(entry['timestamp']) + ")\n")
                     num += 1
                 else:
                     break
         fileStr.write("\n")
         return fileStr.getvalue()
-

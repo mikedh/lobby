@@ -1,10 +1,11 @@
 #!/usr/bin/env python
-#coding:utf-8
+# coding:utf-8
 # Author:  mozman
 # Purpose: tree walker
 # Created: 07.05.2010
 # Copyright (C) 2010, 2011 by Manfred Moitzi
 # License: LGPLv3
+
 
 class Walker(object):
     __slots__ = ['_node', '_stack', '_tree']
@@ -104,7 +105,7 @@ class Walker(object):
             else:
                 self._node = self._node.right
 
-        if self._node is None: # stay at dead end
+        if self._node is None:  # stay at dead end
             raise KeyError(str(key))
         # found node of key
         if self._node.right is not None:
@@ -116,7 +117,7 @@ class Walker(object):
                 succ = self.item
             elif self._node.key < succ[0]:
                 succ = self.item
-        elif succ is None: # given key is biggest in tree
+        elif succ is None:  # given key is biggest in tree
             raise KeyError(str(key))
         return succ
 
@@ -136,7 +137,7 @@ class Walker(object):
                     prev = self.item
                 self._node = self._node.right
 
-        if self._node is None: # stay at dead end (None)
+        if self._node is None:  # stay at dead end (None)
             raise KeyError(str(key))
         # found node of key
         if self._node.left is not None:
@@ -148,6 +149,6 @@ class Walker(object):
                 prev = self.item
             elif self._node.key > prev[0]:
                 prev = self.item
-        elif prev is None: # given key is smallest in tree
+        elif prev is None:  # given key is smallest in tree
             raise KeyError(str(key))
         return prev

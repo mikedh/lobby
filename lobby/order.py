@@ -1,8 +1,10 @@
-'''
-Created on Mar 20, 2013
+"""
+order.py
+--------------
 
-@author: Ash Booth
-'''
+Handle orders.
+"""
+
 
 class Order(object):
     def __init__(self, quote, orderList):
@@ -14,17 +16,18 @@ class Order(object):
         self.nextOrder = None
         self.prevOrder = None
         self.orderList = orderList
-        
+
     def nextOrder(self):
         return self.nextOrder
+
     def prevOrder(self):
         return self.prevOrder
-    
+
     def updateQty(self, newQty, newTimestamp):
         if newQty > self.qty and self.orderList.tailOrder != self:
-            # Move order to end of the tier (loses time priority)            
+            # Move order to end of the tier (loses time priority)
             self.orderList.moveTail(self)
-        self.orderList.volume -= self.qty-newQty
+        self.orderList.volume -= self.qty - newQty
         self.timestamp = newTimestamp
         self.qty = newQty
 

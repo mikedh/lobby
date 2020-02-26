@@ -4,6 +4,7 @@ Created on Mar 22, 2013
 @author: Ash Booth
 '''
 
+
 class OrderList(object):
     def __init__(self):
         self.headOrder = None
@@ -11,25 +12,25 @@ class OrderList(object):
         self.length = 0
         self.volume = 0    # Total share volume
         self.last = None
-        
+
     def __len__(self):
         return self.length
-    
+
     def __iter__(self):
         self.last = self.headOrder
         return self
-    
-    def next(self):
-        if self.last == None:
+
+    def __next__(self):
+        if self.last is None:
             raise StopIteration
         else:
             returnVal = self.last
             self.last = self.last.nextOrder
             return returnVal
-        
+
     def getHeadOrder(self):
         return self.headOrder
-    
+
     def appendOrder(self, order):
         if len(self) == 0:
             order.nextOrder = None
@@ -43,7 +44,7 @@ class OrderList(object):
             self.tailOrder = order
         self.length += 1
         self.volume += order.qty
-        
+
     def removeOrder(self, order):
         self.volume -= order.qty
         self.length -= 1
@@ -52,18 +53,18 @@ class OrderList(object):
         # Remove from list of orders
         nextOrder = order.nextOrder
         prevOrder = order.prevOrder
-        if nextOrder != None and prevOrder != None:
+        if nextOrder is not None and prevOrder is not None:
             nextOrder.prevOrder = prevOrder
             prevOrder.nextOrder = nextOrder
-        elif nextOrder != None:
+        elif nextOrder is not None:
             nextOrder.prevOrder = None
             self.headOrder = nextOrder
-        elif prevOrder != None:
+        elif prevOrder is not None:
             prevOrder.nextOrder = None
             self.tailOrder = prevOrder
-            
+
     def moveTail(self, order):
-        if order.prevOrder != None:
+        if order.prevOrder is not None:
             order.prevOrder.nextOrder = order.nextOrder
         else:
             # Update the head order
@@ -74,9 +75,9 @@ class OrderList(object):
         order.prevOrder = self.tailOrder
         self.tailOrder = order
         order.nextOrder = None
-        
+
     def __str__(self):
-        from cStringIO import StringIO
+        from io import StringIO
         file_str = StringIO()
         for order in self:
             file_str.write("%s\n" % str(order))
