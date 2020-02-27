@@ -28,17 +28,20 @@ class OrderTree(object):
         return self.orderMap[idNum]
 
     def createPrice(self, price):
+        assert isinstance(price, int)
         self.lobDepth += 1
         newList = OrderList()
         self.priceTree.insert(price, newList)
         self.priceMap[price] = newList
 
     def removePrice(self, price):
+        assert isinstance(price, int)
         self.lobDepth -= 1
         self.priceTree.remove(price)
         del self.priceMap[price]
 
     def priceExists(self, price):
+        assert isinstance(price, int)
         return price in self.priceMap
 
     def orderExists(self, idNum):

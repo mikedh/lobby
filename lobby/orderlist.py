@@ -77,8 +77,4 @@ class OrderList(object):
         order.nextOrder = None
 
     def __str__(self):
-        from io import StringIO
-        file_str = StringIO()
-        for order in self:
-            file_str.write("%s\n" % str(order))
-        return file_str.getvalue()
+        return ''.join(str(order) for order in self)

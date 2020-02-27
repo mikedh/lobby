@@ -8,24 +8,23 @@ Keep a book of orders.
 import sys
 import math
 from collections import deque
-from io import StringIO
+
 from .ordertree import OrderTree
 
 
 class OrderBook(object):
-    def __init__(self, tick_size=0.0001):
+    def __init__(self, price_digits=3):
         self.tape = deque(maxlen=None)  # Index [0] is most recent trade
         self.bids = OrderTree()
         self.asks = OrderTree()
         self.lastTick = None
         self.lastTimestamp = 0
-        self.tickSize = tick_size
+        self.price_digits = int(price_digits)
         self.time = 0
         self.nextQuoteID = 0
 
     def clipPrice(self, price):
-        """ Clips the price according to the ticksize """
-        return round(price, int(math.log10(1 / self.tickSize)))
+        return int(round(price * 10 ** self.price_digits))
 
     def updateTime(self):
         self.time += 1
@@ -256,25 +255,24 @@ class OrderBook(object):
             self.tape = []
 
     def __str__(self):
-        fileStr = StringIO()
-        fileStr.write("------ Bids -------\n")
+        result = ["------ Bids -------"]
         if self.bids is not None and len(self.bids) > 0:
-            for k, v in self.bids.priceTree.items(reverse=True):
-                fileStr.write('%s' % v)
-        fileStr.write("\n------ Asks -------\n")
+            result.extend(str(v) for v in
+                          self.bids.priceTree.values(reverse=True))
+        result.append("------ Asks -------")
         if self.asks is not None and len(self.asks) > 0:
-            for k, v in list(self.asks.priceTree.items()):
-                fileStr.write('%s' % v)
-        fileStr.write("\n------ Trades ------\n")
+            result.extend(str(v) for v in
+                          self.asks.priceTree.values(reverse=True))
+        result.append("------ Trades ------")
         if self.tape is not None and len(self.tape) > 0:
             num = 0
             for entry in self.tape:
                 if num < 5:
-                    fileStr.write(str(entry['qty']) + " @ " +
+                    result.append(str(entry['qty']) + " @ " +
                                   str(entry['price']) +
-                                  " (" + str(entry['timestamp']) + ")\n")
+                                  " (" + str(entry['timestamp']) + ")")
                     num += 1
                 else:
                     break
-        fileStr.write("\n")
-        return fileStr.getvalue()
+
+        return '\n'.join(result)

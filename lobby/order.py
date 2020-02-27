@@ -32,4 +32,4 @@ class Order(object):
         self.qty = newQty
 
     def __str__(self):
-        return "%s\t@\t%.4f\tt=%d" % (self.qty, self.price, self.timestamp)
+        return "%s\t@\t%d\tt=%d" % (self.qty, self.price, self.timestamp)
